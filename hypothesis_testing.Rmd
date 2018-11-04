@@ -1,0 +1,19 @@
+---
+title: "Superstition To Have A Baby On Friday The 13th"
+author: "Talha Siddiqui"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+data <- read_csv("data/US_births_2000-2014_SSA_formatted.csv")
+```
+
