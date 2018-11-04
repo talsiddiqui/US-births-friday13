@@ -10,4 +10,4 @@ data <- data_raw %>%
   select(-year, -month, -date_of_month, -day_of_week)
 
 #' Output the formatted data
-write.csv(data, file = "data/US_births_2000-2014_SSA_formatted.csv")
+write.csv(data, file = "data/US_births_2000-2014_SSA_formatted.csv", row.names=FALSE)
