@@ -1,0 +1,87 @@
+---
+title: "Exploratory Data Analysis"
+author: "Talha Siddiqui"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+data <- read_csv("data/US_births_2000-2014_SSA_formatted.csv")
+```
+
+
+## Interesting Trends
+
+I'm curious to know what are the least favorite days to give birth.
+
+```{r}
+data %>% 
+  mutate(dm = as.integer(paste(month(date), day(date),sep = "")),
+         month_day = paste(month(date, label = TRUE), day(date),sep = "-"),
+         daily_avg = mean(births)) %>% 
+  group_by(dm, month_day, daily_avg) %>% 
+  summarise(births = mean(births)) %>%
+  mutate(less_births = births - daily_avg) %>% 
+  arrange(less_births) %>% 
+  head(10) %>% 
+  ggplot(aes(fct_reorder(month_day, dm), less_births, fill = month_day)) +
+  geom_col() + 
+  labs(
+    title = "Top 10 least popular days to give birth",
+    subtitle = "Number of births less than daily average (11,350)",
+    x = "",
+    y = ""
+  ) + 
+  theme(legend.position = "none")
+```
+
+How about the most favorite days to give birth?
+
+```{r}
+data %>% 
+  mutate(dm = as.integer(paste(month(date), day(date),sep = "")),
+         month_day = paste(month(date, label = TRUE), day(date),sep = "-"),
+         daily_avg = mean(births)) %>% 
+  group_by(dm, month_day, daily_avg) %>% 
+  summarise(births = mean(births)) %>%
+  mutate(less_births = births - daily_avg) %>% 
+  arrange(desc(less_births)) %>% 
+  head(10) %>% 
+  ggplot(aes(fct_reorder(month_day, dm), less_births, fill = month_day)) +
+  geom_col() + 
+  labs(
+    title = "Top 10 most popular days to give birth",
+    subtitle = "Number of births above than daily average (11,350)",
+    x = "",
+    y = ""
+  ) + 
+  theme(legend.position = "none")
+```
+
+So many days in September made it to the top of the list. That's ... interesting!
+
+What about the question we are really curious about -- Friday The 13th?
+
+```{r}
+data %>% 
+  group_by(friday13) %>% 
+  summarise(avg_births = mean(births)) %>% 
+  ggplot(aes(friday13, avg_births, fill = friday13)) + geom_col() + 
+  labs(
+    title = "Average daily births",
+    subtitle = "Friday The 13th vs. any other day",
+    x = "Friday The 13th?",
+    y = "Average births per day"
+  ) + 
+  theme(legend.position = "none")
+```
+
+The averages tell us a different story. We have to conduct this test now!

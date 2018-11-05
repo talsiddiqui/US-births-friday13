@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r}
+```{r warning=FALSE}
 library(tidyverse)
 library(lubridate)
 ```
@@ -16,4 +16,3 @@ library(lubridate)
 ```{r}
 data <- read_csv("data/US_births_2000-2014_SSA_formatted.csv")
 ```
-
