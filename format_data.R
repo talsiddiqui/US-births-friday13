@@ -5,6 +5,7 @@ data_raw <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/mas
 data <- data_raw %>% 
   mutate(
     date = make_date(year = year, month = month, day = date_of_month),
+    day = wday(date, label = TRUE),
     friday13 = if_else(day_of_week==5 & date_of_month == 13, TRUE, FALSE)
   ) %>% 
   select(-year, -month, -date_of_month, -day_of_week)
