@@ -1,26 +1,26 @@
 ---
 title: "Exploratory Data Analysis"
 author: "Talha Siddiqui"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r}
+```{r message=FALSE}
 library(tidyverse)
 library(lubridate)
 ```
 
-```{r}
+```{r message=FALSE}
 data <- read_csv("data/US_births_2000-2014_SSA_formatted.csv")
 ```
 
 
 ## Interesting Trends
 
-I'm curious to know what are the least favorite days to give birth.
+I'm curious to know what are the least popular days to give birth.
 
 ```{r}
 data %>% 
@@ -43,7 +43,7 @@ data %>%
   theme(legend.position = "none")
 ```
 
-How about the most favorite days to give birth?
+How about the most popular days to give birth?
 
 ```{r}
 data %>% 
@@ -68,56 +68,26 @@ data %>%
 
 So many days in September made it to the top of the list. That's ... interesting!
 
-```{r}
-data %>% 
-  group_by(day = factor(day, levels= c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
-  summarise(avg_births = mean(births)) %>% 
-  ggplot(aes(day, avg_births, fill = day)) + geom_col() + 
-  labs(
-    title = "Average births per day of the week",
-    x = "",
-    y = "Average Births"
-  ) + 
-  theme(legend.position = "none")
-```
-
-Weekends tend to have much fewer births.
-
 What about the question we are really curious about -- Friday The 13th?
 
 ```{r}
 data %>% 
-  group_by(friday13) %>% 
-  summarise(avg_births = mean(births)) %>% 
-  ggplot(aes(friday13, avg_births, fill = friday13)) + geom_col() + 
+  ggplot(aes(friday13, births, fill = friday13)) + geom_boxplot() + 
   labs(
-    title = "Average daily births",
+    title = "Daily births",
     subtitle = "Friday The 13th vs. any other day",
     x = "Friday The 13th?",
-    y = "Average births per day"
+    y = "Births per day"
   ) + 
+  coord_flip() +
+  expand_limits(y = 0) +
   theme(legend.position = "none")
 ```
 
-What about all 13's -- any day of the week.
 
-```{r}
-data %>% 
-  filter(day(date)==13) %>% 
-  group_by(day = factor(day, levels= c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
-  summarise(avg_births = mean(births)) %>% 
-  ggplot(aes(day, avg_births, fill = day)) + geom_col() + 
-  labs(
-    title = "Average births on 13th falling on different days of the week",
-    x = "",
-    y = "Average Births"
-  ) + 
-  theme(legend.position = "none")
-```
+The median births support the assumption that there are fewer births on Friday The 13th. A test would certainly show interesting findings.
 
-That doesn't seem to be showing any significant drops for when 13th falls on Friday.
-
-We have to conduct this test now!
+The big gap between 25th quantile and median in `any other days (Friday The 13th = FALSE)` is understandable from the least favorite days to have a baby.
 
 But meanwhile, let's explore the data some more.
 
@@ -136,31 +106,54 @@ data %>%
   theme(legend.position = "none")
 ```
 
-Those two clusters really stand out. Lets dig a little deeper.
+Those two clusters in `any other days` really stand out. Lets dig a little deeper.
+
+```{r}
+data %>% filter(friday13 == FALSE) %>% 
+  ggplot(aes(births, fill = "orange")) + geom_histogram(binwidth = 100) + expand_limits(x=0) +
+  labs(
+    title = "Histogram of Daily births",
+    subtitle = "Any other day (Friday The 13th = FALSE)",
+    x = "Births per day",
+    y = "Count"
+  ) + 
+  theme(legend.position = "none")
+```
+
+That's quite a difference. What is going on here?
+
 
 ```{r}
 data %>% 
-  ggplot(aes(births)) + geom_histogram(binwidth = 100) + expand_limits(x=0)
+  group_by(day = factor(day, levels= c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
+  summarise(avg_births = mean(births)) %>% 
+  ggplot(aes(day, avg_births, fill = day)) + geom_col() + 
+  labs(
+    title = "Average births per day of the week",
+    x = "",
+    y = "Average Births"
+  ) + 
+  theme(legend.position = "none")
 ```
 
-That's quite a difference. What is going on here? (work in progress)
+Weekends tend to have much fewer births. This explains how roughly 30% of our data falls in a < 10,000 daily births cluster.
+
+What about all 13's only. Does Friday see a significant drop compared to the other days?
 
 ```{r}
 data %>% 
-  mutate(chunk = as_factor(case_when(births < 10000 ~ "low_births",
-                           births >= 10000 ~ "high_births")))
+  filter(day(date)==13) %>% 
+  group_by(day = factor(day, levels= c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))) %>% 
+  summarise(avg_births = mean(births)) %>% 
+  ggplot(aes(day, avg_births, fill = day)) + geom_col() + 
+  labs(
+    title = "Average births on 13th falling on different days of the week",
+    x = "",
+    y = "Average Births"
+  ) + 
+  theme(legend.position = "none")
 ```
 
+That doesn't seem to be showing any significant drops for when 13th falls on Friday.
 
-```{r eval=FALSE}
-data %>% 
-  mutate(year = as.integer(year(date))) %>% 
-  group_by(year) %>% 
-  summarise(total_births = sum(births),
-            avg_births = mean(births),
-            med_births = median(births)) %>% 
-  ggplot(aes(year, med_births)) + 
-  geom_line() + 
-  expand_limits(y=0)
-```
-
+We have to conduct this test now!
